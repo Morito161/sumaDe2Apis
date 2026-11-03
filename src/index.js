@@ -74,6 +74,18 @@ app.post('/dividir', operands, (req, res) => {
   return respond(res, num1 / num2);
 });
 
+// Return structured errors instead of exposing HTML or stack traces.
+app.use((err, req, res, next) => {
+  if (err && (err.type === 'entity.parse.failed' || err instanceof SyntaxError)) {
+    return res.status(400).json({ error: 'JSON inválido' });
+  }
+  if (err && err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Solicitud demasiado grande' });
+  }
+  console.error('Error interno de la API:', err && err.message);
+  return res.status(500).json({ error: 'Error interno del servidor' });
+});
+
 if (require.main === module) {
   app.listen(port, () => console.log(`Servidor listo en el puerto ${port}`));
 }
